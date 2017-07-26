@@ -1,9 +1,15 @@
 var express = require('express');
-var path = require('path');
+var path = require('path');var mysql = require('mysql');
 
 var action = require('./app/action');
 
 var app = express();
+var connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'PUTYvida940930',
+    database: 'goodhabit'
+});
 
 
 // 根据习惯id获取打卡日期
@@ -24,29 +30,27 @@ app.get('/habit/dates', function(req, res, next) {
 // 获取用户习惯列表
 app.get('/habit/gethabits', function(req, res, next) {
     var query = req.query;
-    var userId = query.userId;
-    var reqStr = '';
 
-    for(var q in query) {
-        if(q !== 'userId') {
-            reqStr += ' AND ' + q + "='" + query[q] + "'";
-        }
-    }
-
-    action.queryDatabase('SELECT * FROM habit WHERE USERID=' + userId + reqStr + ';')
-    .then(function(data) {
-
+    action.gethabit(query).then(function(data) {
         res.send(data);
-    }).catch(function(err){
-        console.log(err)
-        res.send();
     })
+
+
+
 });
 
 
 app.get('/', function(req, res, next) {
-    res.write('a good habit every month ^_^');
+    res.send('a good habit every month ^_^');
 });
+
+function getDates(habit) {
+    return new Promise(function(resolve, reject) {
+        connection.query('SELECT * FROM punch_date WHERE HABITID=' + habit.ID + ';', function(err, data) {
+            return resolve(data);
+        })
+    })
+}
 
 
 var server = app.listen(1234, function() {
